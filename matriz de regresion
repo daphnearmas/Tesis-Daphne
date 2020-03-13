@@ -1,0 +1,38 @@
+
+###unir las dos bases de datos por codigo y poner x-y
+
+dat1=read.table("HORIZONTES.csv", sep=';', header=T) # Definición de archivos de trabajo
+dat2=read.table("PERFILESs.csv", sep=';', header= T ,dec=",") # Definición de archivos de trabajo
+
+str(dat2)
+#4) Creación de BD para trabajo en R, se asocian los horizontes a sus perfiles
+dat <- merge(dat1,dat2,by='ID_Nac',all=FALSE)
+dat
+dat_sp=dat
+dat_sp
+cor(dat_sp)
+
+coordinates(dat_sp) <- ~ X + Y
+
+
+
+proj4string(dat_sp) <- CRS("+proj=utm +zone=17 +south +datum=WGS84 +units=m +no_defs")
+
+
+dat_spWGS84<-spTransform(dat_sp, CRS=projection(uso_ras))
+plot(dat_spWGS84)
+plot(uso_ras)
+dat_spWGS84
+plot(dat_spWGS84, add=TRUE)
+
+lim<- shapefile("ECU_0_Cont.shp")
+lim<-spTransform(lim, CRS=projection(dat_spWGS84))
+
+lis1<-readRDS("geomorfometrias.rds")
+lis1
+
+##empty data fram
+
+m<-readRDS(paste0( lis1[3]))
+m1<-raster::as.data.frame(m[1,][-1,])
+m1$SOC<- numeric()
