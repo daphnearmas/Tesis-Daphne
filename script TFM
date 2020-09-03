@@ -1,0 +1,41 @@
+library(raster)
+library(rgdal)
+library(gdalUtils)
+library(gtools)
+library(rgeos)
+library(tidyverse)
+library(aqp)
+library(plyr)
+library(sp)
+library(GSIF)
+
+
+
+dat1=read.table("HORIZONTES1.csv", sep=';', header=T, dec=",") # Definición de archivos de trabajo
+dat2=read.table("PERFILESs.csv", sep=';', header= T ,dec=",") # Definición de archivos de trabajo
+
+#4) Creación de BD para trabajo en R, se asocian los horizontes a sus perfiles
+dat <- merge(dat1,dat2,by='ID_Nac',all=FALSE)
+
+names(dat)
+
+data=data.frame(id=dat$ID_Nac, X=dat$X, Y=dat$Y, C=dat$CO, H=dat$Hor, nH=dat$Hmor, bot=dat$Lim_inf, top=dat$Lim_sup)
+data$C[data$C==0]=NA
+names(data)
+data=data[complete.cases(data),]
+data1=data.frame(ID=data$id, top=data$top, bot=data$bot, C=data$C, X=data$X, Y=data$Y)
+summary(data1)
+s.lst <- c("ID","X", "Y")
+names(data1)
+summary(data1)
+depths(data1) <- ID ~ top + bot
+site(data1) <- as.formula(paste("~", paste(s.lst[-1], collapse="+"), sep=""))
+coordinates(data1) <- ~X+Y
+proj4string(data1) <- CRS(" +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0")
+data <-as.geosamples(data1)    ####ESTA ES LA LINEA QUE ME DA PROBLEMAS 
+
+formulaString = as.formula(paste("C ~ ",
+                                 paste(names(covsp))))
+
+C.m <- fit.gstatModel(observations=data, formulaString,
+                      covariates=covsp, method='ranger')
